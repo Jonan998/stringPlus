@@ -87,9 +87,9 @@ void s21_apply_width(char **str, flags_options *flags, char *tmp_buffer) {
     int spaces = flags->width - len;
     char fill = ' ';
   
-    // ИСПРАВЛЕНИЕ 1: Логика флага 0
+    // Логика флага 0
     if (flags->zero && !flags->minus) {
-        // Для c, s, p флаг 0 игнорируется (безопаснее использовать пробелы)
+        // Для c, s, p флаг 0 игнорируется
         if (s21_strchr("csp", flags->specifier)) {
             fill = ' ';
         }
@@ -102,7 +102,6 @@ void s21_apply_width(char **str, flags_options *flags, char *tmp_buffer) {
         }
     }
 
-    // ИСПРАВЛЕНИЕ 2: Обработка знака при заполнении нулями
     // Если мы заполняем нулями, знак должен быть напечатан ДО нулей
     if (fill == '0' && (tmp_buffer[0] == '+' || tmp_buffer[0] == '-' || tmp_buffer[0] == ' ')) {
         **str = tmp_buffer[0]; // Печатаем знак сразу
@@ -267,7 +266,7 @@ char *handle_percent(char *str, flags_options *flags, va_list *args) {
 // вспомогательная функция (число в строку)
 void s21_itoa(long long n, char *buffer) {
   int i = 0;
-  unsigned long long num = (n < 0) ? -n : n; // Используем unsigned для безопасности
+  unsigned long long num = (n < 0) ? -n : n;
 
   if (num == 0) buffer[i++] = '0';
   
@@ -303,13 +302,13 @@ char *handle_int(char *str, flags_options *flags, va_list *args) {
   int len_d = (int)s21_strlen(digits);
   if (flags->has_precision && flags->precision == 0 && val == 0) len_d = 0;
 
-  // 1. Определяем знак
+  // Определяем знак
   char sign = 0;
   if (val < 0) sign = '-';
   else if (flags->plus) sign = '+';
   else if (flags->space) sign = ' ';
 
-  // 2. Сборка "тела" числа: [Знак] + [Нули точности] + [Цифры]
+  // Сборка "тела" числа: [Знак] + [Нули точности] + [Цифры]
   if (sign) {
       final_num[f_idx++] = sign;
   }
@@ -368,38 +367,38 @@ char *handle_float(char *str, flags_options *flags, va_list *args) {
     return str;
 }
 
-void s21_f_to_str(long double val, char *buffer, flags_options *flags) {
-    int precision = flags->has_precision ? flags->precision : 6;
-    
-    // Округление
+// Функция конвертирует ПОЛОЖИТЕЛЬНОЕ число в строку цифр с точкой
+void s21_f_to_str(long double val, char *buffer, int precision, int hash_flag) {
+    // Округление: добавляем 0.5 к последнему знаку
     long double round_val = 0.5;
     for (int i = 0; i < precision; i++) round_val /= 10.0;
     val += round_val;
 
-    long double ipart;
-    long double fpart = modfl(val, &ipart);
- 
-    s21_utoa((unsigned long long)ipart, buffer);
+    // Отделяем целую часть
+    long double ipart_f;
+    long double fpart = modfl(val, &ipart_f);
+    
+    // Записываем целую часть в буфер
+    s21_utoa((unsigned long long)ipart_f, buffer);
+    int pos = (int)s21_strlen(buffer);
 
-    if (precision > 0 || flags->hash) {
-        int len = s21_strlen(buffer);
-        buffer[len] = '.';
-        buffer[len + 1] = '\0';
+    // Добавляем точку, если есть точность или флаг #
+    if (precision > 0 || hash_flag) {
+        buffer[pos++] = '.';
+        buffer[pos] = '\0';
     }
 
-    if (precision > 0) {
-        for (int i = 0; i < precision; i++) {
-            fpart *= 10.0;
-            int digit = (int)fpart;
-            int curr_len = s21_strlen(buffer);
-            buffer[curr_len] = digit + '0';
-            buffer[curr_len + 1] = '\0';
-            fpart -= digit;
-        }
+    // Формируем дробную часть
+    for (int i = 0; i < precision; i++) {
+        fpart *= 10.0;
+        int digit = (int)fpart;
+        buffer[pos++] = digit + '0';
+        fpart -= digit;
     }
+    buffer[pos] = '\0';
 }
-// парт 3 - блок, где реализация оставшихся спецификаторов
 
+// парт 3 - блок, где реализация оставшихся спецификаторов
 void s21_translate(unsigned long long n, char *buffer, int base, int uppercase) {
     char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
     char temp[512] = {0};
@@ -416,52 +415,65 @@ void s21_translate(unsigned long long n, char *buffer, int base, int uppercase) 
     }
     buffer[i] = '\0';
 }
-// Помощник для знака и префикса float
-void s21_add_float_sign(char *buffer, long double val, flags_options *flags) {
-    char sign_str[2] = {0};
-    if (val < 0) sign_str[0] = '-';
-    else if (flags->plus) sign_str[0] = '+';
-    else if (flags->space) sign_str[0] = ' ';
-    
-    if (sign_str[0]) {
-        char temp[1024] = {0};
-        s21_strcat(temp, sign_str);
-        s21_strcat(temp, buffer);
-        s21_strcpy(buffer, temp);
-    }
-}
+
 
 void s21_float_to_buffer(long double val, char *buffer, flags_options *flags) {
-    long double abs_val = (val < 0) ? -val : val;
-    s21_f_to_str(abs_val, buffer, flags);
-    s21_add_float_sign(buffer, val, flags);
+    char tmp[1024] = {0};
+    int precision = flags->has_precision ? flags->precision : 6;
+    
+    // Получаем "голую" строку числа без знака (абсолютное значение)
+    s21_f_to_str(fabsl(val), tmp, precision, flags->hash);
+
+    // Добавляем знак в начало итогового буфера
+    int pos = 0;
+    if (val < 0) {
+        buffer[pos++] = '-';
+    } else if (flags->plus) {
+        buffer[pos++] = '+';
+    } else if (flags->space) {
+        buffer[pos++] = ' ';
+    }
+    buffer[pos] = '\0';
+
+    // Соединяем знак и число
+    s21_strcat(buffer, tmp);
 }
 
 void s21_scientific_to_buffer(long double val, char *buffer, flags_options *flags) {
-    long double abs_val = (val < 0) ? -val : val;
-    int pow = s21_get_exponent(&abs_val);
-    
-    // Формируем мантиссу
-    s21_f_to_str(abs_val, buffer, flags);
-    
-    // Формируем экспоненту
-    int abs_pow = (pow < 0) ? -pow : pow;
-    
+    long double abs_val = fabsl(val);
+    int pow = (val == 0) ? 0 : s21_get_exponent(&abs_val);
+    int precision = flags->has_precision ? flags->precision : 6;
+
+    // Генерируем мантиссу 
+    char mantissa[1024] = {0};
+    s21_f_to_str(abs_val, mantissa, precision, flags->hash);
+
+    // если после округления мантисса стала >= 10 (например, была 9.99)
+    if (mantissa[0] == '1' && mantissa[1] == '0') {
+        pow++;
+        // Пересчитываем мантиссу для новой экспоненты
+        abs_val = fabsl(val);
+        for(int i = 0; i < (pow > 0 ? pow : -pow); i++) 
+            if (pow > 0) abs_val /= 10.0; else abs_val *= 10.0;
+        s21_f_to_str(abs_val, mantissa, precision, flags->hash);
+    }
+
+    // Собираем всё в buffer
+    int pos = 0;
+    if (val < 0) buffer[pos++] = '-';
+    else if (flags->plus) buffer[pos++] = '+';
+    else if (flags->space) buffer[pos++] = ' ';
+    buffer[pos] = '\0';
+
+    s21_strcat(buffer, mantissa);
     s21_strcat(buffer, (flags->specifier == 'e' || flags->specifier == 'g') ? "e" : "E");
     s21_strcat(buffer, (pow >= 0) ? "+" : "-");
     
-    // Если экспонента меньше 10, добавляем ведущий ноль
-    if (abs_pow < 10) {
-        s21_strcat(buffer, "0");
-    }
-    
-    // Преобразуем число степени в строку корректно (даже если там 3 цифры)
-    char pow_num_str[20];
-    s21_itoa(abs_pow, pow_num_str); 
-    s21_strcat(buffer, pow_num_str);
-
-    // Добавляем знак к началу всего числа
-    s21_add_float_sign(buffer, val, flags);
+    char pow_str[20] = {0};
+    int abs_pow = (pow < 0) ? -pow : pow;
+    if (abs_pow < 10) s21_strcat(buffer, "0");
+    s21_itoa(abs_pow, pow_str);
+    s21_strcat(buffer, pow_str);
 }
 
 char *handle_uint_hex_oct(char *str, flags_options *flags, va_list *args) {
@@ -576,42 +588,35 @@ void s21_remove_trailing_zeros(char *buffer) {
 char *handle_g(char *str, flags_options *flags, va_list *args) {
     long double val = (flags->length == 'L') ? va_arg(*args, long double) : va_arg(*args, double);
     
-    // 1. Установка точности по умолчанию (6 значащих цифр)
-    if (!flags->has_precision) flags->precision = 6;
-    // Точность 0 трактуется как 1 значащая цифра
+    if (!flags->has_precision) {
+        flags->precision = 6;
+    }
     if (flags->precision == 0) flags->precision = 1;
 
-    int saved_prec = flags->precision;
-    char saved_spec = flags->specifier;
+    int p = flags->precision;
+    int saved_has_prec = flags->has_precision;
+    flags->has_precision = 1;
 
-    long double temp_val = (val < 0) ? -val : val;
+    long double temp_val = fabsl(val);
     int pow = (val == 0) ? 0 : s21_get_exponent(&temp_val);
 
     char buffer[1024] = {0};
     
-    // 2. Выбор между 'f' и 'e' согласно стандарту:
-    // Используется 'e', если pow < -4 или pow >= precision
-    if (pow < -4 || pow >= flags->precision) {
-        flags->specifier = (saved_spec == 'g') ? 'e' : 'E';
-        // Для %g точность P означает P значащих цифр. 
-        // В %e это превращается в P-1 знаков после запятой.
-        flags->precision = saved_prec - 1;
+    if (pow < -4 || pow >= p) {
+        flags->specifier = (flags->specifier == 'g') ? 'e' : 'E';
+        flags->precision = p - 1; // Для %e точность — это цифры ПОСЛЕ точки
         s21_scientific_to_buffer(val, buffer, flags);
     } else {
-        // Для %g точность P означает P значащих цифр.
-        // В %f это превращается в P - 1 - pow знаков после запятой.
-        flags->precision = saved_prec - 1 - pow;
+        flags->precision = p - 1 - pow; // Для %f точность подстраивается под экспоненту
         s21_float_to_buffer(val, buffer, flags);
     }
 
-    // 3. Удаление незначащих нулей (если нет флага #)
     if (!flags->hash) {
         s21_remove_trailing_zeros(buffer);
     }
 
-    // Восстанавливаем флаги для корректной работы s21_apply_width
-    flags->precision = saved_prec;
-    flags->specifier = saved_spec;
+    flags->precision = p;
+    flags->has_precision = saved_has_prec;
     
     s21_apply_width(&str, flags, buffer);
     return str;

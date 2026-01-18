@@ -72,7 +72,7 @@ void s21_utoa(unsigned long long n, char *buffer);
 void s21_apply_width(char **str, flags_options *flags, char *tmp_buffer);
 
 int s21_is_digit(char c);
-void s21_f_to_str(long double val, char *buffer, flags_options *flags);
+void s21_f_to_str(long double val, char *buffer, int precision, int hash_flag);
 void s21_translate(unsigned long long n, char *buffer, int base, int uppercase);
 char *handle_uint_hex_oct(char *str, flags_options *flags, va_list *args);
 int s21_get_exponent(long double *val);
@@ -80,7 +80,6 @@ char *handle_scientific(char *str, flags_options *flags, va_list *args);
 void s21_remove_trailing_zeros(char *buffer);
 char *handle_g(char *str, flags_options *flags, va_list *args);
 
-void s21_add_float_sign(char *buffer, long double val, flags_options *flags);
 void s21_float_to_buffer(long double val, char *buffer, flags_options *flags);
 void s21_scientific_to_buffer(long double val, char *buffer, flags_options *flags);
 char *s21_strcpy(char *dest, const char *src);
