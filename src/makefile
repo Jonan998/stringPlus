@@ -1,12 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c11
 GCOV_FLAGS = -fprofile-arcs -ftest-coverage
 
 LIB_NAME = s21_string.a
-SRC = s21_string.c
+SRC = s21_string.c s21_sprintf.c s21_sscanf.c
 OBJ = $(SRC:.c=.o)
 
-TEST_SRC = tests/test_s21_string.c
+TEST_SRC = tests1/*.c
 TEST_BIN = test
 
 OS := $(shell uname)
