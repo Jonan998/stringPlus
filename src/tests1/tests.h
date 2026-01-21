@@ -56,4 +56,6 @@ Suite *test_sprintf_pointer(void);
 Suite *test_sprintf_string(void);
 Suite *test_sprintf_unsigned(void);
 
+Suite *s21_string_suite(void);
+
 #endif

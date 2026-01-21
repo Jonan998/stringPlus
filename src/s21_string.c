@@ -331,14 +331,16 @@ char *s21_strerror(int errnum) {
   return buffer;
 }
 
-char *s21_strcat(char *dest, const char *src) {
+char *s21_strncat(char *dest, const char *src, s21_size_t n) {
   s21_size_t i = s21_strlen(dest);
   s21_size_t j = 0;
-  while (src[j]) {
+
+  while (j < n && src[j] != '\0') {
     dest[i + j] = src[j];
     j++;
   }
   dest[i + j] = '\0';
+
   return dest;
 }
 

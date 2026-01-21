@@ -61,7 +61,8 @@ START_TEST(sprintf_6_g) {
   char *str3 = "Small: %g, Very small: %.2g";
   double num1 = 0.000000123;
   double num2 = 0.0000123;
-  ck_assert_int_eq(sprintf(str1, str3, num1, num2), s21_sprintf(str2, str3, num1, num2));
+  ck_assert_int_eq(sprintf(str1, str3, num1, num2),
+                   s21_sprintf(str2, str3, num1, num2));
   ck_assert_pstr_eq(str1, str2);
 }
 END_TEST
