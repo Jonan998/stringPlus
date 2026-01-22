@@ -67,7 +67,6 @@ void reverse_string(char *s);
 void s21_utoa(unsigned long long n, char *buffer);
 void s21_apply_width(char **str, flags_options *flags, char *tmp_buffer);
 
-int s21_is_digit(char c);
 void s21_f_to_str(long double val, char *buffer, int precision, int hash_flag);
 void s21_translate(unsigned long long n, char *buffer, int base, int uppercase);
 char *handle_uint_hex_oct(char *str, flags_options *flags, va_list *args);

@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../s21_sscanf.h"
+#include "../s21_sscanf_internal.h"
 #include "../s21_string.h"
 
 Suite *strlen_test(void);
@@ -57,5 +59,6 @@ Suite *test_sprintf_string(void);
 Suite *test_sprintf_unsigned(void);
 
 Suite *s21_string_suite(void);
+Suite *test_sscanf(void);
 
 #endif

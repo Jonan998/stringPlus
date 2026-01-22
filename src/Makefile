@@ -3,7 +3,7 @@ CFLAGS = -Wall -Werror -Wextra -std=c11
 GCOV_FLAGS = -fprofile-arcs -ftest-coverage
 
 LIB_NAME = s21_string.a
-SRC = s21_string.c s21_sprintf.c 
+SRC = *.c 
 OBJ = $(SRC:.c=.o)
 
 TEST_SRC =  tests1/*.c

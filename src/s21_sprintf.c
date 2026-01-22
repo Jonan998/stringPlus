@@ -62,8 +62,6 @@ void parsing_flags(const char **format, flags_options *flags) {
   }
 }
 
-int s21_is_digit(char c) { return (c >= '0' && c <= '9'); }
-
 void parsing_width(const char **format, flags_options *flags, va_list *args) {
   if (**format == '*') {
     (*format)++;
@@ -79,7 +77,7 @@ void parsing_width(const char **format, flags_options *flags, va_list *args) {
     }
 
   } else {
-    while (s21_is_digit(**format)) {
+    while (**format >= '0' && **format <= '9') {
       flags->width = flags->width * 10 + (**format - '0');
       (*format)++;
     }
@@ -104,7 +102,7 @@ void parsing_precision(const char **format, flags_options *flags,
         flags->precision = 0;
       }
     } else {
-      while (s21_is_digit(**format)) {
+      while (**format >= '0' && **format <= '9') {
         flags->precision = flags->precision * 10 + (**format - '0');
         (*format)++;
       }
