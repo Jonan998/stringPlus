@@ -3,14 +3,14 @@
 int s21_sprintf(char *str, const char *format, ...) {
   va_list args;
   va_start(args, format);
-  char *start = str;  // указатель на начало строки
+  char *start = str;
 
   while (*format != '\0') {
     if (*format == '%') {
       format++;
-      flags_options flags = {0};  // обнуление структуры
-      parameter_parsing(&format, &flags, &args);  // парсинг формата
-      str = process_specifier(str, &flags, &args);  // итоговая строка
+      flags_options flags = {0};
+      parameter_parsing(&format, &flags, &args); 
+      str = process_specifier(str, &flags, &args);
 
     } else {
       *str++ = *format;
@@ -20,7 +20,7 @@ int s21_sprintf(char *str, const char *format, ...) {
 
   *str = '\0';
   va_end(args);
-  return (int)(str - start);  // кол-во записанных символов
+  return (int)(str - start); 
 }
 
 const char *parameter_parsing(const char **format, flags_options *flags,
@@ -67,7 +67,7 @@ void parsing_width(const char **format, flags_options *flags, va_list *args) {
     (*format)++;
     int width = va_arg(
         *args,
-        int);  // лезет в список и достает там следующее число в списке данных
+        int);  
 
     if (width < 0) {
       flags->minus = 1;
