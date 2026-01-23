@@ -9,8 +9,8 @@ int s21_sprintf(char *str, const char *format, ...) {
     if (*format == '%') {
       format++;
       flags_options flags = {0};
-      parameter_parsing(&format, &flags, &args); 
-      str = process_specifier(str, &flags, &args);
+      parameter_parsing(&format, &flags, &args);
+      str = process_specifier(str, start, &flags, &args);
 
     } else {
       *str++ = *format;
@@ -20,7 +20,7 @@ int s21_sprintf(char *str, const char *format, ...) {
 
   *str = '\0';
   va_end(args);
-  return (int)(str - start); 
+  return (int)(str - start);
 }
 
 const char *parameter_parsing(const char **format, flags_options *flags,
@@ -65,9 +65,7 @@ void parsing_flags(const char **format, flags_options *flags) {
 void parsing_width(const char **format, flags_options *flags, va_list *args) {
   if (**format == '*') {
     (*format)++;
-    int width = va_arg(
-        *args,
-        int);  
+    int width = va_arg(*args, int);
 
     if (width < 0) {
       flags->minus = 1;
@@ -117,7 +115,8 @@ void parsing_length(const char **format, flags_options *flags) {
   }
 }
 
-char *process_specifier(char *str, flags_options *flags, va_list *args) {
+char *process_specifier(char *str, char *start, flags_options *flags,
+                        va_list *args) {
   switch (flags->specifier) {
     case 'd':
     case 'i':
@@ -151,6 +150,9 @@ char *process_specifier(char *str, flags_options *flags, va_list *args) {
     case 'g':
     case 'G':
       str = handle_g(str, flags, args);
+      break;
+    case 'n':
+      str = handle_n(str, start, args);
       break;
     default:
       break;
@@ -416,7 +418,6 @@ char *handle_uint_hex_oct(char *str, flags_options *flags, va_list *args) {
   char final_num[1024] = {0};
   int base = (flags->specifier == 'o') ? 8 : 16;
   int upper = (flags->specifier == 'X');
-
   s21_translate(val, num_str, base, upper);
   int len = (int)s21_strlen(num_str);
 
@@ -425,6 +426,11 @@ char *handle_uint_hex_oct(char *str, flags_options *flags, va_list *args) {
   }
 
   if (flags->specifier == 'p') {
+    if (flags->plus) {
+      s21_strcat(final_num, "+");
+    } else if (flags->space) {
+      s21_strcat(final_num, " ");
+    }
     s21_strcat(final_num, "0x");
   } else if (flags->hash && val != 0) {
     if (base == 8) {
@@ -601,8 +607,7 @@ void s21_remove_trailing_zeros(char *buffer) {
 
 char *s21_strcpy(char *dest, const char *src) {
   char *ptr = dest;
-  while ((*ptr++ = *src++))
-    ;
+  while ((*ptr++ = *src++));
   return dest;
 }
 
@@ -615,4 +620,10 @@ char *s21_strcat(char *dest, const char *src) {
   }
   dest[i + j] = '\0';
   return dest;
+}
+
+char *handle_n(char *str, char *start, va_list *args) {
+  int *n = va_arg(*args, int *);
+  *n = (int)(str - start);
+  return str;
 }

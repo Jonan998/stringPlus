@@ -47,7 +47,8 @@ typedef struct {
 int s21_sprintf(char *str, const char *format, ...);
 const char *parameter_parsing(const char **format, flags_options *flags,
                               va_list *args);
-char *process_specifier(char *str, flags_options *flags, va_list *args);
+char *process_specifier(char *str, char *start, flags_options *flags,
+                        va_list *args);
 
 void parsing_flags(const char **format, flags_options *flags);
 void parsing_width(const char **format, flags_options *flags, va_list *args);
@@ -80,5 +81,6 @@ void s21_scientific_to_buffer(long double val, char *buffer,
                               flags_options *flags);
 char *s21_strcpy(char *dest, const char *src);
 char *s21_strcat(char *dest, const char *src);
+char *handle_n(char *str, char *start, va_list *args);
 
 #endif
