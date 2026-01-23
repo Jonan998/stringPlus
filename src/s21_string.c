@@ -219,6 +219,7 @@ char *s21_strerror(int errnum) {
       "No anode",
       "Invalid request code",
       "Invalid slot",
+      NULL,
       "Bad font file format",
       "Device not a stream",
       "No data available",
@@ -292,8 +293,9 @@ char *s21_strerror(int errnum) {
       "Key was rejected by service",
       "Owner died",
       "State not recoverable",
-      "Operation not possible due to RF-kill"};
-  int max_err = 131;
+      "Operation not possible due to RF-kill",
+      "Memory page has hardware error"};
+  int max_err = 133;
 #endif
 
   static char buffer[256];
