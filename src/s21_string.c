@@ -201,7 +201,8 @@ char *s21_strerror(int errnum) {
       "No locks available",
       "Function not implemented",
       "Directory not empty",
-      "Too many symbolic links encountered",
+      "Too many levels of symbolic links",
+      "Unknown error 41",
       "No message of desired type",
       "Identifier removed",
       "Channel number out of range",
@@ -290,43 +291,59 @@ char *s21_strerror(int errnum) {
       "Key has been revoked",
       "Key was rejected by service",
       "Owner died",
-      "State not recoverable"};
+      "State not recoverable",
+      "Operation not possible due to RF-kill"};
   int max_err = 133;
 #endif
 
   static char buffer[256];
+  s21_memset(buffer, 0, sizeof(buffer));
 
   if (errnum >= 0 && errnum <= max_err) {
-    return (char *)errors[errnum];
+    s21_strncpy(buffer, errors[errnum], sizeof(buffer) - 1);
+    return buffer;
+  }
+
+  char num_str[32];
+  s21_memset(num_str, 0, sizeof(num_str));
+
+  int num = errnum;
+  int is_negative = 0;
+  int pos = 0;
+
+  if (num < 0) {
+    is_negative = 1;
+    num = -num;
+  }
+
+  if (num == 0) {
+    num_str[pos++] = '0';
+  } else {
+    while (num > 0 && pos < (int)sizeof(num_str) - 1) {
+      num_str[pos++] = (char)('0' + num % 10);
+      num /= 10;
+    }
+  }
+
+  for (int i = 0, j = pos - 1; i < j; i++, j--) {
+    char temp = num_str[i];
+    num_str[i] = num_str[j];
+    num_str[j] = temp;
   }
 
 #if defined(__APPLE__)
-  s21_memset(buffer, 0, sizeof(buffer));
-  s21_memcpy(buffer, "Unknown error: ", 15);
+  s21_strncpy(buffer, "Unknown error: ", sizeof(buffer) - 1);
+  if (is_negative) {
+    s21_strncat(buffer, "-", sizeof(buffer) - s21_strlen(buffer) - 1);
+  }
 #else
-  s21_memset(buffer, 0, sizeof(buffer));
-  s21_memcpy(buffer, "Unknown error ", 14);
+  s21_strncpy(buffer, "Unknown error ", sizeof(buffer) - 1);
+  if (is_negative) {
+    s21_strncat(buffer, "-", sizeof(buffer) - s21_strlen(buffer) - 1);
+  }
 #endif
 
-  int num = errnum;
-  int i = 0;
-  char tmp[32];
-
-  if (num < 0) {
-    buffer[14] = '-';
-    num = -num;
-    i = 1;
-  }
-
-  int pos = 0;
-  do {
-    tmp[pos++] = (char)('0' + num % 10);
-    num /= 10;
-  } while (num);
-
-  for (int j = pos - 1; j >= 0; j--) {
-    buffer[14 + i + pos - 1 - j] = tmp[j];
-  }
+  s21_strncat(buffer, num_str, sizeof(buffer) - s21_strlen(buffer) - 1);
 
   return buffer;
 }
