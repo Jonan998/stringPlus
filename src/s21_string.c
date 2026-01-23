@@ -202,7 +202,7 @@ char *s21_strerror(int errnum) {
       "Function not implemented",
       "Directory not empty",
       "Too many levels of symbolic links",
-      "Unknown error 41",
+      NULL,
       "No message of desired type",
       "Identifier removed",
       "Channel number out of range",
@@ -293,13 +293,13 @@ char *s21_strerror(int errnum) {
       "Owner died",
       "State not recoverable",
       "Operation not possible due to RF-kill"};
-  int max_err = 133;
+  int max_err = 131;
 #endif
 
   static char buffer[256];
   s21_memset(buffer, 0, sizeof(buffer));
 
-  if (errnum >= 0 && errnum <= max_err) {
+  if (errnum >= 0 && errnum <= max_err && errors[errnum] != NULL) {
     s21_strncpy(buffer, errors[errnum], sizeof(buffer) - 1);
     return buffer;
   }
@@ -308,11 +308,11 @@ char *s21_strerror(int errnum) {
   s21_memset(num_str, 0, sizeof(num_str));
 
   int num = errnum;
-  int is_negative = 0;
+  int neg = 0;
   int pos = 0;
 
   if (num < 0) {
-    is_negative = 1;
+    neg = 1;
     num = -num;
   }
 
@@ -326,22 +326,20 @@ char *s21_strerror(int errnum) {
   }
 
   for (int i = 0, j = pos - 1; i < j; i++, j--) {
-    char temp = num_str[i];
+    char t = num_str[i];
     num_str[i] = num_str[j];
-    num_str[j] = temp;
+    num_str[j] = t;
   }
 
 #if defined(__APPLE__)
   s21_strncpy(buffer, "Unknown error: ", sizeof(buffer) - 1);
-  if (is_negative) {
-    s21_strncat(buffer, "-", sizeof(buffer) - s21_strlen(buffer) - 1);
-  }
 #else
   s21_strncpy(buffer, "Unknown error ", sizeof(buffer) - 1);
-  if (is_negative) {
+#endif
+
+  if (neg) {
     s21_strncat(buffer, "-", sizeof(buffer) - s21_strlen(buffer) - 1);
   }
-#endif
 
   s21_strncat(buffer, num_str, sizeof(buffer) - s21_strlen(buffer) - 1);
 
